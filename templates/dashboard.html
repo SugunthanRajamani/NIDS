@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IDS — Live Monitor</title>
+<style>
+  :root{
+    --bg:#0a0e1a;--card:#111827;--border:#1f2d45;
+    --accent:#3b82f6;--green:#22c55e;--red:#ef4444;
+    --yellow:#f59e0b;--purple:#a855f7;--cyan:#06b6d4;
+    --text:#e2e8f0;--muted:#64748b;--r:12px
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+  /* NAV */
+  nav{display:flex;align-items:center;justify-content:space-between;
+      padding:12px 22px;background:var(--card);border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+  .brand{font-size:1.05rem;font-weight:700;color:var(--accent);letter-spacing:1px}
+  .nav-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  .badge{font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:700}
+  .safe{background:#14532d;color:var(--green)}
+  .attack{background:#450a0a;color:var(--red);animation:pulse .9s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .btn{padding:6px 14px;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;transition:.15s}
+  .br{background:#7f1d1d;color:var(--red)}.br:hover{background:#991b1b}
+  .bb{background:#1e3a5f;color:var(--accent)}.bb:hover{background:#1d4ed8;color:#fff}
+  .bp{background:#3b1f6e;color:var(--purple)}.bp:hover{background:#6d28d9;color:#fff}
+  .by{background:#422006;color:var(--yellow)}.by:hover{background:#92400e;color:#fff}
+  .bc{background:#0e4a56;color:var(--cyan)}.bc:hover{background:#0e7490;color:#fff}
+  .bg{background:#14532d;color:var(--green)}.bg:hover{background:#166534;color:#fff}
+
+  /* LAYOUT */
+  .page{padding:16px 22px}
+  .row1{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+  .row2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+  .card h3{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px}
+  .val{font-size:1.8rem;font-weight:700}
+  .sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+  .vg{color:var(--green)}.vr{color:var(--red)}.vy{color:var(--yellow)}
+  .vb{color:var(--accent)}.vp{color:var(--purple)}.vc{color:var(--cyan)}
+
+  /* PPS GAUGE */
+  #ppsGauge{font-size:1.6rem;font-weight:700;color:var(--cyan)}
+  #ppsBar{height:6px;border-radius:3px;background:#1f2d45;margin-top:8px;overflow:hidden}
+  #ppsBarFill{height:100%;border-radius:3px;background:var(--cyan);transition:width .5s,background .5s;width:0%}
+
+  /* TABLE */
+  .log-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .log-head h2{font-size:.9rem;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:.76rem}
+  th{background:#0f172a;color:var(--muted);padding:6px 10px;text-align:left;font-weight:500;position:sticky;top:0;z-index:1}
+  td{padding:5px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border:none}
+  tr:hover td{background:#1a2234}
+  .tbl-wrap{max-height:340px;overflow-y:auto}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.66rem;font-weight:700}
+  .pn{background:#14532d33;color:var(--green);border:1px solid #22c55e33}
+  .pa{background:#450a0a;color:var(--red);border:1px solid #ef444433}
+  .pb{background:#422006;color:var(--yellow);border:1px solid #f59e0b33}
+
+  .ltag{font-size:.6rem;padding:1px 5px;border-radius:4px;font-weight:700}
+  .lpkt{background:#3b1f6e;color:var(--purple)}
+  .lhttp{background:#1e3a5f;color:var(--accent)}
+  .lsim{background:#422006;color:var(--yellow)}
+
+  /* RIGHT COLUMN */
+  .rcol{display:flex;flex-direction:column;gap:12px}
+
+  /* SPARK */
+  #sparkCanvas{width:100%;height:66px;display:block}
+
+  /* ATTACK TYPES */
+  .atk-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.78rem}
+  .atk-bar-wrap{flex:1;height:6px;background:#1f2d45;border-radius:3px;overflow:hidden}
+  .atk-bar{height:100%;border-radius:3px;transition:width .6s}
+  .atk-label{min-width:80px;color:var(--muted)}
+  .atk-count{min-width:28px;text-align:right;font-weight:600}
+
+  /* BLOCKED IPs */
+  .ip-list{max-height:160px;overflow-y:auto}
+  .ip-row{display:flex;align-items:center;justify-content:space-between;
+          padding:5px 0;border-bottom:1px solid var(--border);font-size:.76rem}
+  .ip-row:last-child{border:none}
+  .ip-addr{font-family:monospace;color:var(--red)}
+  .ip-rate{font-size:.65rem;color:var(--muted);margin-left:6px}
+
+  /* SIM PANEL */
+  .sim-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  #simMsg{font-size:.7rem;color:var(--muted);margin-top:6px;min-height:16px}
+
+  /* ATTACK ALERT OVERLAY — uses normal flow faux-viewport, no position:fixed */
+  #overlayWrap{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.78);z-index:9999;
+    align-items:center;justify-content:center
+  }
+  #overlayWrap.show{display:flex}
+  .abox{
+    background:#150303;border:2px solid var(--red);
+    border-radius:18px;padding:36px 44px;text-align:center;
+    max-width:460px;width:90%;
+    box-shadow:0 0 80px #ef444455,0 0 20px #ef444433;
+    animation:zin .22s ease
+  }
+  @keyframes zin{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+  .aico{font-size:3rem;margin-bottom:10px}
+  .atitle{font-size:1.5rem;font-weight:700;color:var(--red);margin-bottom:8px;letter-spacing:.5px}
+  .aip{font-family:monospace;font-size:1.1rem;color:var(--yellow);margin:10px 0 4px}
+  .atype{font-size:.82rem;color:var(--purple);margin-bottom:3px}
+  .arate{font-size:.78rem;color:var(--cyan);margin-bottom:3px}
+  .aconf{font-size:.74rem;color:var(--muted);margin-bottom:20px}
+  .aclose{padding:10px 32px;font-size:.9rem}
+
+  /* WIRESHARK TIP */
+  .tip{background:#0c1526;border:1px solid var(--border);border-radius:8px;
+       padding:10px 14px;font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.6}
+  .tip code{color:var(--cyan);font-family:monospace;font-size:.75rem}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">🛡️ IDS LIVE MONITOR</div>
+  <div class="nav-right">
+    <span id="statusBadge" class="badge safe">● SAFE</span>
+    <span id="ppsNav" style="font-size:.7rem;color:var(--cyan)">0 pps</span>
+    <span style="font-size:.65rem;color:var(--muted)">Layer 1 (PKT) + Layer 2 (HTTP)</span>
+    <button class="btn bb" onclick="location.href='/home'">🏠 Home</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ROW 1: stat cards -->
+  <div class="row1">
+    <div class="card">
+      <h3>Total Logged</h3>
+      <div class="val vb" id="sTotal">—</div>
+      <div class="sub">events in CSV</div>
+    </div>
+    <div class="card">
+      <h3>Normal</h3>
+      <div class="val vg" id="sNormal">—</div>
+      <div class="sub">clean traffic</div>
+    </div>
+    <div class="card">
+      <h3>Attacks</h3>
+      <div class="val vr" id="sAttacks">—</div>
+      <div class="sub">ML + rate detected</div>
+    </div>
+    <div class="card">
+      <h3>IPs Blocked</h3>
+      <div class="val vy" id="sBlocked">—</div>
+      <div class="sub">auto-blocked</div>
+    </div>
+    <!-- Live PPS gauge -->
+    <div class="card">
+      <h3>Live Packet Rate</h3>
+      <div id="ppsGauge">0 <span style="font-size:.9rem;color:var(--muted)">pps</span></div>
+      <div id="ppsBar"><div id="ppsBarFill"></div></div>
+      <div class="sub" id="ppsLabel">monitoring…</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: log + right panel -->
+  <div class="row2">
+
+    <!-- Live log table -->
+    <div class="card">
+      <div class="log-head">
+        <h2>📋 Live Traffic Log  <span style="font-size:.65rem;color:var(--muted)" id="logTime"></span></h2>
+        <button class="btn bg" style="font-size:.65rem;padding:3px 8px" onclick="refreshTraffic()">↻ Refresh</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Time</th><th>IP</th><th>Path / Type</th>
+            <th>Label</th><th>Conf</th><th>Rate pps</th><th>Layer</th>
+          </tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="rcol">
+
+      <!-- Spark chart -->
+      <div class="card">
+        <h3>Attack Events (last 60s)</h3>
+        <canvas id="sparkCanvas"></canvas>
+      </div>
+
+      <!-- Attack type breakdown -->
+      <div class="card">
+        <h3>Attack Type Breakdown</h3>
+        <div id="atkTypes">
+          <div style="font-size:.75rem;color:var(--muted)">No attacks detected yet.</div>
+        </div>
+      </div>
+
+      <!-- Simulate panel -->
+      <div class="card">
+        <h3>Simulate Attack</h3>
+        <div class="sim-row">
+          <button class="btn br"  onclick="simulate('syn')">⚡ SYN</button>
+          <button class="btn bp"  onclick="simulate('udp')">💥 UDP</button>
+          <button class="btn by"  onclick="simulate('icmp')">🏓 ICMP</button>
+          <button class="btn bb"  onclick="simulate('http')">🌐 HTTP</button>
+        </div>
+        <div id="simMsg"></div>
+
+        <!-- Wireshark tip -->
+        <div class="tip" style="margin-top:10px">
+          <b style="color:var(--text)">Wireshark / hping3 attack commands:</b><br>
+          <code>sudo hping3 -S --flood -p 5000 127.0.0.1</code>  ← SYN flood<br>
+          <code>sudo hping3 --udp --flood -p 5000 127.0.0.1</code>  ← UDP flood<br>
+          <code>sudo hping3 --icmp --flood 127.0.0.1</code>  ← ICMP flood<br>
+          Run <code>sudo python app.py</code> so sniffer can see loopback packets.
+        </div>
+      </div>
+
+      <!-- Blocked IPs -->
+      <div class="card">
+        <div class="log-head">
+          <h2>🚫 Blocked IPs</h2>
+        </div>
+        <div class="ip-list" id="ipList">
+          <p style="color:var(--muted);font-size:.76rem">No IPs blocked yet.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ATTACK ALERT OVERLAY -->
+<div id="overlayWrap">
+  <div class="abox">
+    <div class="aico">🔥</div>
+    <div class="atitle">ATTACK DETECTED!</div>
+    <div style="color:#fca5a5;font-size:.88rem">Intrusion identified — IP auto-blocked</div>
+    <div class="aip"  id="aIp">—</div>
+    <div class="atype" id="aType">—</div>
+    <div class="arate" id="aRate">—</div>
+    <div class="aconf" id="aConf">—</div>
+    <button class="btn br aclose" onclick="closeAlert()">✓ Acknowledge</button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let sparkData = new Array(60).fill(0);
+let alertQueue = [], showingAlert = false;
+let atkTypeMap = {};
+
+// ── Spark chart ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('sparkCanvas');
+const ctx    = canvas.getContext('2d');
+
+function drawSpark() {
+  canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+  canvas.height = canvas.offsetHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  const max = Math.max(...sparkData, 1);
+  ctx.clearRect(0, 0, W, H);
+  // grid
+  ctx.strokeStyle = '#1f2d45'; ctx.lineWidth = 0.5;
+  for (let i = 0; i < 4; i++) {
+    const y = H * i / 3;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // fill
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(239,68,68,.45)'); g.addColorStop(1, 'rgba(239,68,68,.02)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  sparkData.forEach((v, i) => {
+    const x = W * i / (sparkData.length - 1), y = H - (v / max) * H * .9;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+  // line
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  sparkData.forEach((v, i) => {
+    const x = W * i / (sparkData.length - 1), y = H - (v / max) * H * .9;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+// ── PPS gauge ──────────────────────────────────────────────────────────────
+const PPS_MAX = 500;
+
+function updatePPS(pps) {
+  document.getElementById('ppsGauge').innerHTML =
+    `${pps} <span style="font-size:.9rem;color:var(--muted)">pps</span>`;
+  document.getElementById('ppsNav').textContent = pps + ' pps';
+  const pct = Math.min(pps / PPS_MAX * 100, 100);
+  const fill = document.getElementById('ppsBarFill');
+  fill.style.width = pct + '%';
+  if (pps > 200)      { fill.style.background = 'var(--red)'; }
+  else if (pps > 80)  { fill.style.background = 'var(--yellow)'; }
+  else                { fill.style.background = 'var(--cyan)'; }
+  const lbl = pps > 200 ? '🔴 HIGH — likely attack!' :
+              pps > 80  ? '🟡 Elevated' : '🟢 Normal';
+  document.getElementById('ppsLabel').textContent = lbl;
+}
+
+// ── Attack type bars ───────────────────────────────────────────────────────
+const ATK_COLORS = {
+  'SYN-Flood':  'var(--red)',
+  'UDP-Flood':  'var(--purple)',
+  'ICMP-Flood': 'var(--yellow)',
+  'HTTP-Flood': 'var(--accent)',
+};
+
+function updateAtkTypes(types) {
+  Object.assign(atkTypeMap, types);
+  const total = Object.values(atkTypeMap).reduce((a, b) => a + b, 0);
+  if (total === 0) return;
+  const el = document.getElementById('atkTypes');
+  el.innerHTML = Object.entries(atkTypeMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => {
+      const pct  = Math.round(v / total * 100);
+      const col  = ATK_COLORS[k] || 'var(--muted)';
+      return `<div class="atk-row">
+        <span class="atk-label">${k}</span>
+        <div class="atk-bar-wrap">
+          <div class="atk-bar" style="width:${pct}%;background:${col}"></div>
+        </div>
+        <span class="atk-count" style="color:${col}">${v}</span>
+      </div>`;
+    }).join('');
+}
+
+// ── Main traffic refresh ───────────────────────────────────────────────────
+async function refreshTraffic() {
+  try {
+    const [tRes, mRes] = await Promise.all([
+      fetch('/api/traffic'),
+      fetch('/api/metrics'),
+    ]);
+    const data    = await tRes.json();
+    const metrics = await mRes.json();
+
+    document.getElementById('sTotal').textContent   = data.total   ?? 0;
+    document.getElementById('sNormal').textContent  = data.normal  ?? 0;
+    document.getElementById('sAttacks').textContent = data.attacks ?? 0;
+    document.getElementById('sBlocked').textContent = (data.blocked_ips ?? []).length;
+    document.getElementById('logTime').textContent  = new Date().toLocaleTimeString();
+
+    // Status badge
+    const badge = document.getElementById('statusBadge');
+    if ((data.attacks ?? 0) > 0) {
+      badge.className = 'badge attack'; badge.textContent = '● ATTACK';
+    } else {
+      badge.className = 'badge safe'; badge.textContent = '● SAFE';
+    }
+
+    // PPS gauge
+    updatePPS(metrics.pps ?? 0);
+
+    // Attack type breakdown
+    if (metrics.attack_types) updateAtkTypes(metrics.attack_types);
+
+    // Spark
+    sparkData.push(data.attacks ?? 0);
+    if (sparkData.length > 60) sparkData.shift();
+    drawSpark();
+
+    // Log table
+    const events = (data.events ?? []).slice().reverse();
+    document.getElementById('logBody').innerHTML = events.map(e => {
+      const isAtk = String(e.is_attack) === '1' || e.is_attack === true;
+      const path  = e.path || '/';
+      const isPkt = path.startsWith('[PKT:');
+      const isSim = path.startsWith('[SIM:');
+
+      const pillCls = isAtk ? 'pa' : 'pn';
+      const pillTxt = isAtk ? '🔴 ' + (e.label || 'Attack') : '🟢 Normal';
+
+      let layerTag = `<span class="ltag lhttp">HTTP</span>`;
+      if (isPkt) layerTag = `<span class="ltag lpkt">PKT</span>`;
+      if (isSim) layerTag = `<span class="ltag lsim">SIM</span>`;
+
+      const conf      = (parseFloat(e.confidence ?? 0) * 100).toFixed(1) + '%';
+      const confColor = isAtk ? 'var(--red)' : 'var(--green)';
+
+      // Try to parse rate from features string
+      let rate = '—';
+      try {
+        const m = (e.features || '').match(/'rate': ([\d.]+)/);
+        if (m) rate = parseFloat(m[1]).toFixed(0) + ' pps';
+      } catch (_) {}
+
+      return `<tr>
+        <td>${e.time || '—'}</td>
+        <td style="font-family:monospace;font-size:.72rem">${e.ip || '—'}</td>
+        <td style="color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${path}">${path}</td>
+        <td><span class="pill ${pillCls}">${pillTxt}</span></td>
+        <td style="font-size:.7rem;color:${confColor}">${conf}</td>
+        <td style="font-size:.7rem;color:var(--cyan)">${rate}</td>
+        <td>${layerTag}</td>
+      </tr>`;
+    }).join('');
+
+    // Blocked IP list
+    const ips = data.blocked_ips ?? [];
+    const ipEl = document.getElementById('ipList');
+    if (ips.length === 0) {
+      ipEl.innerHTML = '<p style="color:var(--muted);font-size:.76rem">No IPs blocked yet.</p>';
+    } else {
+      ipEl.innerHTML = ips.slice(-20).map(ip => `
+        <div class="ip-row">
+          <span class="ip-addr">${ip}<span class="ip-rate">${ip.startsWith('127') || ip.startsWith('::1') ? '● localhost' : ''}</span></span>
+          <button class="btn bb" style="font-size:.62rem;padding:2px 7px"
+            onclick="unblockIP('${ip}')">Unblock</button>
+        </div>`).join('');
+    }
+
+  } catch (e) { console.error('refresh error', e); }
+}
+
+// ── Alert ──────────────────────────────────────────────────────────────────
+function showAlert(a) {
+  document.getElementById('aIp').textContent   = '🌐 ' + a.ip;
+  document.getElementById('aType').textContent = '⚡ ' + (a.type || a.label || 'DoS Attack');
+  document.getElementById('aRate').textContent =
+    a.rate_pps ? `📡 ${a.rate_pps} packets/sec` : '';
+  document.getElementById('aConf').textContent =
+    `Confidence: ${(a.confidence * 100).toFixed(1)}%`;
+  document.getElementById('overlayWrap').classList.add('show');
+  // Alert beep
+  try {
+    const ac = new AudioContext(), o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'square';
+    o.frequency.setValueAtTime(660, ac.currentTime);
+    o.frequency.setValueAtTime(440, ac.currentTime + 0.1);
+    g.gain.setValueAtTime(0.2, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.5);
+    o.start(); o.stop(ac.currentTime + 0.5);
+  } catch (_) {}
+  showingAlert = true;
+}
+
+function closeAlert() {
+  document.getElementById('overlayWrap').classList.remove('show');
+  showingAlert = false;
+  setTimeout(() => { if (alertQueue.length > 0) showAlert(alertQueue.shift()); }, 350);
+}
+
+// ── SSE ────────────────────────────────────────────────────────────────────
+function connectSSE() {
+  const es = new EventSource('/api/stream');
+  es.onmessage = e => {
+    let d;
+    try { d = JSON.parse(e.data); } catch { return; }
+    if (d.type === 'connected') return;
+    if (!showingAlert) showAlert(d);
+    else alertQueue.push(d);
+    refreshTraffic();
+  };
+  es.onerror = () => setTimeout(connectSSE, 3000);
+}
+
+// ── Simulate ───────────────────────────────────────────────────────────────
+async function simulate(type) {
+  const labels = { syn: 'SYN Flood', udp: 'UDP Flood', icmp: 'ICMP Flood', http: 'HTTP Flood' };
+  const msg = document.getElementById('simMsg');
+  msg.innerHTML = `<span style="color:var(--yellow)">⚡ Sending ${labels[type]} …</span>`;
+  try {
+    await fetch('/api/simulate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, count: 400 })
+    });
+    msg.innerHTML = `<span style="color:var(--green)">✅ ${labels[type]} triggered — watch dashboard</span>`;
+    setTimeout(() => { msg.textContent = ''; refreshTraffic(); }, 5000);
+  } catch (err) {
+    msg.innerHTML = `<span style="color:var(--red)">Error: ${err.message}</span>`;
+  }
+}
+
+async function unblockIP(ip) {
+  await fetch('/api/unblock', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ip })
+  });
+  refreshTraffic();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+// Single 3-second cycle: traffic log + metrics + spark + PPS — all together
+function tick() {
+  refreshTraffic();
+}
+connectSSE();
+tick();                          // run once immediately on load
+setInterval(tick, 3000);        // then every 3 seconds exactly
+window.addEventListener('resize', drawSpark);
+</script>
+</body>
+</html>

